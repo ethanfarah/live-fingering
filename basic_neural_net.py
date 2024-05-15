@@ -1,29 +1,24 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from array_ingestion import training_tensors, training_labels, validation_tensors, validation_labels, test_tensors, test_labels
+# from array_ingestion import training_tensors, training_labels, validation_tensors, validation_labels, test_tensors, test_labels
+
+# Load tensors and labels
+training_tensors = torch.load("data_tensors/training_tensors.pt")
+training_labels = torch.load("data_tensors/training_labels.pt")
+val_tensor = torch.load("data_tensors/validation_tensors.pt")
+val_labels = torch.load("data_tensors/validation_labels.pt")
+test_tensors = torch.load("data_tensors/test_tensors.pt")
+test_labels = torch.load("data_tensors/test_labels.pt")
 
 # Check for GPU availability
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-print("First data point")
-print("Sample data from the tensor1:", len(training_tensors))
-print("Sample data from the tensor1:", len(training_tensors[0]))
-print("Sample data from the tensor1:", len(training_tensors[0][0]))
-print("Sample data from the tensor1:", len(training_tensors[0][0][0]))
-print("Sample data from the tensor1:", len(training_tensors[0][0][0][0]))
-print("Sample data from the tensor1:", len(training_tensors[0][0][0][0][0]))
-# print("Sample data from the tensor1:", len(training_tensors[0][0][0][0][0][0]))
-
-print("Second data point")
-print("Sample data from the tensor2:", len(training_tensors))
-print("Sample data from the tensor2:", len(training_tensors[1]))
-print("Sample data from the tensor2:", len(training_tensors[1][0]))
-print("Sample data from the tensor2:", len(training_tensors[1][0][0]))
-print("Sample data from the tensor2:", len(training_tensors[1][0][0][0]))
-print("Sample data from the tensor2:", len(training_tensors[1][0][0][0][0]))
-# print("Sample data from the tensor2:", len(training_tensors[1][0][0][0][0][0]))
+# dimensions for tensor: 8313 x 29358
+print(training_tensors.size())
+print(training_tensors.size(1))
+print(training_labels.size())
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, tensors, labels):

@@ -18,6 +18,17 @@ training_tensors, training_labels = [], []
 validation_tensors, validation_labels = [], []
 test_tensors, test_labels = [], []
 
+longest_video = 0
+
+# gets the int from the label
+label_to_idx = {}
+with open('data/wlasl_class_list.txt', 'r') as f:
+    for line in f:
+        parts = line.strip().split('\t')
+        if len(parts) == 2:
+            index, label = parts
+            label_to_idx[label] = int(index)
+
 # Load dataset info
 with open(os.path.join(json_directory, "WLASL_v0.3.json"), "r") as labeling_set:
     with open(os.path.join(json_directory, "nslt_2000.json"), "r") as crossfold_set:
@@ -44,33 +55,56 @@ with open(os.path.join(json_directory, "WLASL_v0.3.json"), "r") as labeling_set:
                 
                 # current tensor dimensions: 1 x F x 2 x 21 x 3
                 video_tensor = video_tensor.float()
-                # new tensor dimensions: 1 x F x 2 x 21 x 3
+                # new tensor dimensions: F x 2 x 21 x 3
                 video_tensor = video_tensor[0]
-                # video_tensor = video_tensor.flatten()
+
+                # makes video tensor F x (2*21*3)
+                video_tensor = video_tensor.view(video_tensor.size(0), -1)
+                assert video_tensor.size(1) == 126, f"Expected 126 features, got {video_tensor.size(1)}"
+
+                if video_tensor.size(0) > longest_video:
+                    longest_video = video_tensor.size(0)
 
                 if dataset_class == "train":
-                    training_tensors.append(video_tensor)
-                    training_labels.append(label)
+                    training_tensors.append(torch.tensor(video_tensor))
+                    training_labels.append(torch.tensor([label_to_idx[label]]))
                 elif dataset_class == "val":
-                    validation_tensors.append(video_tensor)
-                    validation_labels.append(label)
+                    validation_tensors.append(torch.tensor(video_tensor))
+                    validation_labels.append(torch.tensor([label_to_idx[label]]))
                 elif dataset_class == "test":
-                    test_tensors.append(video_tensor)
-                    test_labels.append(label)
+                    test_tensors.append(torch.tensor(video_tensor))
+                    test_labels.append(torch.tensor([label_to_idx[label]]))
                 else:
                     print("Unknown dataset class:", dataset_class)
                     continue
 
-# Convert lists of tensors to single tensors
-# train_tensor = torch.cat(training_tensors, dim=0)
-# val_tensor = torch.cat(validation_tensors, dim=0)
-# test_tensor = torch.cat(test_tensors, dim=0)
+
+# pad each tensor to the longest video length with -1
+for i in range(len(training_tensors)):
+    training_tensors[i] = torch.cat((training_tensors[i], torch.zeros(longest_video - training_tensors[i].size(0), 126) - 1))
+for i in range(len(validation_tensors)):
+    validation_tensors[i] = torch.cat((validation_tensors[i], torch.zeros(longest_video - validation_tensors[i].size(0), 126) - 1))
+for i in range(len(test_tensors)):
+    test_tensors[i] = torch.cat((test_tensors[i], torch.zeros(longest_video - test_tensors[i].size(0), 126) - 1))
+
+# turn the arrays into tensors
+training_tensors = torch.stack(training_tensors)
+training_labels = torch.stack(training_labels)
+validation_tensors = torch.stack(validation_tensors)
+validation_labels = torch.stack(validation_labels)
+test_tensors = torch.stack(test_tensors)
+test_labels = torch.stack(test_labels)
+
+# flatten all tensors to N x F x (2*21*3)
+training_tensors = training_tensors.view(training_tensors.size(0), -1)
+validation_tensors = validation_tensors.view(validation_tensors.size(0), -1)
+test_tensors = test_tensors.view(test_tensors.size(0), -1)
 
 # Save the tensors and labels to disk
-torch.save((training_tensors, training_labels), os.path.join(tensor_directory, "training_tensors.pt"))
-torch.save((validation_tensors, validation_labels), os.path.join(tensor_directory, "validation_tensors.pt"))
-torch.save((test_tensors, test_labels), os.path.join(tensor_directory, "test_tensors.pt"))
+# torch.save((training_tensors, training_labels), os.path.join(tensor_directory, "training_tensors.pt"))
+# torch.save((validation_tensors, validation_labels), os.path.join(tensor_directory, "validation_tensors.pt"))
+# torch.save((test_tensors, test_labels), os.path.join(tensor_directory, "test_tensors.pt"))
 
-print("Training set size:", len(training_tensors))
-print("Validation set size:", len(validation_tensors))
-print("Test set size:", len(test_tensors))
+print("Training set size:", training_tensors.size())
+print("Validation set size:", validation_tensors.size())
+print("Test set size:", test_tensors.size())

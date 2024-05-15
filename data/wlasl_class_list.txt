@@ -161,7 +161,7 @@
 160	late
 161	leave
 162	list
-163	losear
+163	lose
 164	name
 165	old
 166	person
