@@ -66,13 +66,13 @@ with open(os.path.join(json_directory, "WLASL_v0.3.json"), "r") as labeling_set:
                     longest_video = video_tensor.size(0)
 
                 if dataset_class == "train":
-                    training_tensors.append(torch.tensor(video_tensor))
+                    training_tensors.append(video_tensor.clone().detach())
                     training_labels.append(torch.tensor([label_to_idx[label]]))
                 elif dataset_class == "val":
-                    validation_tensors.append(torch.tensor(video_tensor))
+                    validation_tensors.append(video_tensor.clone().detach())
                     validation_labels.append(torch.tensor([label_to_idx[label]]))
                 elif dataset_class == "test":
-                    test_tensors.append(torch.tensor(video_tensor))
+                    test_tensors.append(video_tensor.clone().detach())
                     test_labels.append(torch.tensor([label_to_idx[label]]))
                 else:
                     print("Unknown dataset class:", dataset_class)
@@ -96,14 +96,14 @@ test_tensors = torch.stack(test_tensors)
 test_labels = torch.stack(test_labels)
 
 # flatten all tensors to N x F x (2*21*3)
-training_tensors = training_tensors.view(training_tensors.size(0), -1)
-validation_tensors = validation_tensors.view(validation_tensors.size(0), -1)
-test_tensors = test_tensors.view(test_tensors.size(0), -1)
+training_tensors = training_tensors.view(training_tensors.size(0), training_tensors.size(1), -1)
+validation_tensors = validation_tensors.view(validation_tensors.size(0), training_tensors.size(1), -1)
+test_tensors = test_tensors.view(test_tensors.size(0), training_tensors.size(1), -1)
 
 # Save the tensors and labels to disk
-# torch.save((training_tensors, training_labels), os.path.join(tensor_directory, "training_tensors.pt"))
-# torch.save((validation_tensors, validation_labels), os.path.join(tensor_directory, "validation_tensors.pt"))
-# torch.save((test_tensors, test_labels), os.path.join(tensor_directory, "test_tensors.pt"))
+torch.save((training_tensors, training_labels), os.path.join(tensor_directory, "training_tensors.pt"))
+torch.save((validation_tensors, validation_labels), os.path.join(tensor_directory, "validation_tensors.pt"))
+torch.save((test_tensors, test_labels), os.path.join(tensor_directory, "test_tensors.pt"))
 
 print("Training set size:", training_tensors.size())
 print("Validation set size:", validation_tensors.size())
