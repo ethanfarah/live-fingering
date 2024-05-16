@@ -78,6 +78,10 @@ with open(os.path.join(json_directory, "WLASL_v0.3.json"), "r") as labeling_set:
                     print("Unknown dataset class:", dataset_class)
                     continue
 
+#print size of label_to_index
+print(len(label_to_idx))
+# print largest value of label_to_index
+print(max(label_to_idx.values()))
 
 # pad each tensor to the longest video length with -1
 for i in range(len(training_tensors)):
@@ -101,9 +105,12 @@ validation_tensors = validation_tensors.view(validation_tensors.size(0), trainin
 test_tensors = test_tensors.view(test_tensors.size(0), training_tensors.size(1), -1)
 
 # Save the tensors and labels to disk
-torch.save((training_tensors, training_labels), os.path.join(tensor_directory, "training_tensors.pt"))
-torch.save((validation_tensors, validation_labels), os.path.join(tensor_directory, "validation_tensors.pt"))
-torch.save((test_tensors, test_labels), os.path.join(tensor_directory, "test_tensors.pt"))
+torch.save(training_tensors, os.path.join(tensor_directory, "training_tensors.pt"))
+torch.save(training_labels, os.path.join(tensor_directory, "training_labels.pt"))
+torch.save(validation_tensors, os.path.join(tensor_directory, "validation_tensors.pt"))
+torch.save(validation_labels, os.path.join(tensor_directory, "validation_labels.pt"))
+torch.save(test_tensors, os.path.join(tensor_directory, "test_tensors.pt"))
+torch.save(test_labels, os.path.join(tensor_directory, "test_labels.pt"))
 
 print("Training set size:", training_tensors.size())
 print("Validation set size:", validation_tensors.size())
